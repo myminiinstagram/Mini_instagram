@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>مینی اینستاگرام</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body { font-family: Tahoma, sans-serif; background-color: #f5f5f5; margin: 0; padding: 0; }
+    header { background-color: #fff; padding: 15px; text-align: center; box-shadow: 0 0 5px rgba(0,0,0,0.1); font-size: 24px; font-weight: bold; }
+    .posts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+    .post { background-color: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .post img { width: 100%; height: auto; display: block; }
+    .post-info { padding: 10px; }
+    .username { font-weight: bold; margin-bottom: 5px; }
+    .caption { color: #555; margin-bottom: 10px; }
+    .buttons { display: flex; gap: 10px; }
+    button { padding: 5px 10px; border: none; border-radius: 5px; background-color: #eee; cursor: pointer; transition: 0.2s; }
+    button:hover { background-color: #ddd; }
+    .comment-box { margin-top: 10px; }
+    .comment-box input { width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 5px; }
+    #add-post { padding: 20px; background-color: #fff; margin: 20px; }
+    #add-post input { width: 100%; margin-bottom: 10px; padding: 5px; }
+  </style>
+</head>
+<body>
+  <header>مینی اینستاگرام</header>
+
+  <div id="add-post">
+    <h3>افزودن پست جدید</h3>
+    <input type="text" id="image-url" placeholder="لینک عکس">
+    <input type="text" id="caption" placeholder="توضیح پست">
+    <button onclick="addPost()">افزودن پست</button>
+  </div>
+
+  <div class="posts" id="posts">
+    <div class="post" data-post-id="1">
+      <img src="https://via.placeholder.com/400x300" alt="عکس ۱">
+      <div class="post-info">
+        <div class="username">کاربر۱ <button class="follow-btn">فالو</button></div>
+        <div class="caption">این اولین پست من است!</div>
+        <div class="buttons">
+          <button class="like-btn">لایک</button>
+          <button onclick="toggleComment(this)">کامنت</button>
+        </div>
+        <div class="comment-box" style="display: none;">
+          <input type="text" placeholder="نظر بنویسید...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleComment(button) {
+      const box = button.closest(".post-info").querySelector(".comment-box");
+      box.style.display = box.style.display === "none" ? "block" : "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.querySelectorAll(".post").forEach(post => {
+        const postId = post.getAttribute("data-post-id");
+        const likeBtn = post.querySelector(".like-btn");
+        const followBtn = post.querySelector(".follow-btn");
+
+        if (localStorage.getItem(`like-${postId}`) === "true") {
+          likeBtn.textContent = "لایک شد";
+          likeBtn.style.backgroundColor = "#ffdddd";
+        }
+        if (localStorage.getItem(`follow-${postId}`) === "true") {
+          followBtn.textContent = "فالو شد";
+          followBtn.style.backgroundColor = "#ccffcc";
+        }
+
+        likeBtn.addEventListener("click", () => {
+          const liked = localStorage.getItem(`like-${postId}`) === "true";
+          if (liked) {
+            localStorage.setItem(`like-${postId}`, "false");
+            likeBtn.textContent = "لایک";
+            likeBtn.style.backgroundColor = "#eee";
+          } else {
+            localStorage.setItem(`like-${postId}`, "true");
+            likeBtn.textContent = "لایک شد";
+            likeBtn.style.backgroundColor = "#ffdddd";
+          }
+        });
+
+        followBtn.addEventListener("click", () => {
+          const followed = localStorage.getItem(`follow-${postId}`) === "true";
+          if (followed) {
+            localStorage.setItem(`follow-${postId}`, "false");
+            followBtn.textContent = "فالو";
+            followBtn.style.backgroundColor = "#eee";
+          } else {
+            localStorage.setItem(`follow-${postId}`, "true");
+            followBtn.textContent = "فالو شد";
+            followBtn.style.backgroundColor = "#ccffcc";
+          }
+        });
+      });
+    });
+
+    let postCounter = 2;
+
+    function addPost() {
+      const imageUrl = document.getElementById("image-url").value;
+      const caption = document.getElementById("caption").value;
+      if (!imageUrl || !caption) return alert("لینک عکس و توضیح الزامی است.");
+
+      const postsContainer = document.getElementById("posts");
+      const post = document.createElement("div");
+      post.className = "post";
+      post.setAttribute("data-post-id", postCounter);
+      post.innerHTML = `
+        <img src="${imageUrl}" alt="پست جدید">
+        <div class="post-info">
+          <div class="username">شما <button class="follow-btn">فالو</button></div>
+          <div class="caption">${caption}</div>
+          <div class="buttons">
+            <button class="like-btn">لایک</button>
+            <button onclick="toggleComment(this)">کامنت</button>
+          </div>
+          <div class="comment-box" style="display: none;">
+            <input type="text" placeholder="نظر بنویسید...">
+          </div>
+        </div>
+      `;
+      postsContainer.prepend(post);
+      addEvents(post, postCounter++);
+      document.getElementById("image-url").value = "";
+      document.getElementById("caption").value = "";
+    }
+
+    function addEvents(post, postId) {
+      const likeBtn = post.querySelector(".like-btn");
+      const followBtn = post.querySelector(".follow-btn");
+
+      likeBtn.addEventListener("click", () => {
+        const liked = localStorage.getItem(`like-${postId}`) === "true";
+        localStorage.setItem(`like-${postId}`, liked ? "false" : "true");
+        likeBtn.textContent = liked ? "لایک" : "لایک شد";
+        likeBtn.style.backgroundColor = liked ? "#eee" : "#ffdddd";
+      });
+
+      followBtn.addEventListener("click", () => {
+        const followed = localStorage.getItem(`follow-${postId}`) === "true";
+        localStorage.setItem(`follow-${postId}`, followed ? "false" : "true");
+        followBtn.textContent = followed ? "فالو" : "فالو شد";
+        followBtn.style.backgroundColor = followed ? "#eee" : "#ccffcc";
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(() => console.log("Service Worker ثبت شد"))
+        .catch(err => console.log("خطا در ثبت Service Worker:", err));
+    }
+  </script>
+</body>
+</html>
